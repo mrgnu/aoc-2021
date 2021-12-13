@@ -98,7 +98,6 @@
 (defn decorate-signal-pattern [signal-pattern]
   {
    :pattern signal-pattern
-   :count   (count signal-pattern)
    }
   )
 
@@ -119,22 +118,24 @@
        )
   )
 
-(defn get-unique
-  ([decorated-signal-patterns] (get-unique decorated-signal-patterns :pattern))
+(defn filter-unique
+  "find unique patterns by masked pattern length - any pattern length
+  that occurs exactly once can be identified"
+  [decorated-signal-patterns]
+  (->> decorated-signal-patterns
+       (group-by (comp count :masked-pattern))
+       (filter (comp (partial = 1) count second))
+       (map second)
+       (map first)
+       ;; sorting by masked count makes sure order is same in specs
+       ;; and patterns
+       (sort-by (comp count :masked-pattern))
+       ))
 
-  ([decorated-signal-patterns pattern-key]
-   (->> decorated-signal-patterns
-        (group-by (comp count pattern-key))
-        (filter (comp (partial = 1) count second))
-        (map second)
-        (map first)
-        ;; sorting by (possibly masked) count makes sure order is same
-        ;; in specs and patterns
-        (sort-by (comp count pattern-key))
-        ))
-  )
-
-(defn mask-signal-pattern [mask decorated-signal-pattern]
+(defn mask-signal-pattern
+  "masks out some digits from :pattern in a set.
+  result is stored in :masked-pattern."
+  [mask decorated-signal-pattern]
   (let [mask (into #{} mask)
         masked (reduce (fn [acc c]
                          (if (contains? mask c)
@@ -145,22 +146,26 @@
                        )]
     (assoc decorated-signal-pattern :masked-pattern masked)))
 
-(defn find-mask-unique [decorated-signal-patterns
-                        known-patterns]
+(defn find-unique [decorated-signal-patterns
+                   known-patterns]
   (some (fn [mask]
           (let [masked (map (partial mask-signal-pattern mask)
                             decorated-signal-patterns)]
-            (not-empty (get-unique masked :masked-pattern))
+            (not-empty (filter-unique masked))
             ))
-        known-patterns))
+        ;; this will mask with empty for first iteration
+        (or (not-empty known-patterns) [""])))
 
-(defn filter-unknown [decorated-signal-patterns known-patterns]
+(defn filter-unknown
+  [decorated-signal-patterns known-patterns]
   (let [known-patterns (set known-patterns)]
     (->> decorated-signal-patterns
-         (filter (comp not (partial contains? known-patterns) :pattern))
+         (remove (comp (partial contains? known-patterns) :pattern))
          set)))
 
-(defn collect-known [unique-specs unique-pats]
+(defn collect-known
+  "gets digit, stock pattern and garbled pattern from unique sets"
+  [unique-specs unique-pats]
   (assert (= (count unique-specs) (count unique-pats))
           "unique: arity mismatch")
   (reduce (fn [acc [spec pat]]
@@ -178,44 +183,38 @@
           ;; zip
           (map vector unique-specs unique-pats)))
 
-(defn get-unique-by-mask [known-digit-specs decorated-signal-patterns]
-  (let [unknown-pats (filter-unknown decorated-signal-patterns
-                                     known-digit-specs)]
-    (find-mask-unique unknown-pats known-digit-specs)))
-
-(defn find-digits
-  "returns signal pattern -> digit map"
+(defn build-digit-map
+  "returns a map with mappings from garbled pattern to corresponding
+  digit.
+  this is done by looking for patterns of unique length in both stock
+  and garbled specs. masking of known patterns is applied to unknown
+  until all patterns are identified."
   [signal-patterns]
-  (let [specs (decorated-digit-specs)
-        pats  (decorate-signal-patterns signal-patterns)
-        known #{}]
-    (let [unique-specs (get-unique specs)
-          unique-pats  (get-unique pats)]
-      ;; collect unique patterns and map to digits
-      (let [known (into known (collect-known unique-specs unique-pats))]
-        (loop [known known]
-          (if (>= (count known) (count signal-patterns))
-            known
-            ;; mask out known patterns and find new unique
-            (let [unique-specs (get-unique-by-mask
-                                (map #(get % :spec-pattern) known)
-                                specs)
-                  unique-pats (get-unique-by-mask
-                               (map #(get % :pattern) known)
-                               pats)
-                  known (into known (collect-known unique-specs unique-pats))]
-              (recur known))))
-        ))))
+  (loop [unknown-specs (decorated-digit-specs)
+         unknown-pats  (decorate-signal-patterns signal-patterns)
+         known         #{}]
+    (if (>= (count known) (count signal-patterns))
+      (reduce (fn [acc {:keys [pattern digit]}]
+                (assoc acc pattern digit))
+              {}
+              known)
+      ;; mask out known patterns and find new unique
+      (let [unique-specs (find-unique unknown-specs
+                                      (map :spec-pattern known))
+            unique-pats  (find-unique unknown-pats
+                                      (map :pattern known))
+            known (into known (collect-known unique-specs unique-pats))
+            unknown-specs (filter-unknown unknown-specs
+                                          (map :spec-pattern known))
+            unknown-pats  (filter-unknown unknown-pats
+                                          (map :pattern known))]
+        (recur unknown-specs unknown-pats known)))))
 
 (defn map-outputs [digit-spec]
-  (let [knowns (find-digits (:signal-patterns digit-spec))
-        pat-dig-map (reduce (fn [acc known]
-                              (assoc acc (:pattern known) (:digit known)))
-                            {}
-                            knowns)]
+  (let [digit-map (build-digit-map (:signal-patterns digit-spec))]
     (->> digit-spec
          :outputs
-         (map (partial get pat-dig-map))
+         (map (partial get digit-map))
          (map str)
          (apply str)
          Integer.
