@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= 61229 (->> test-input-8-1 parse-segment-specs (map map-outputs) (apply +))))
       )
     ))
 
@@ -19,5 +20,6 @@
       )
 
     (testing "part 2"
+      (is (= 986163 (day-8-2)))
       )
     ))
