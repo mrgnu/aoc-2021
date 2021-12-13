@@ -46,20 +46,35 @@
    )
 
   ([[fx fy] [tx ty]]
-   (let [[fx tx] (sort [fx tx])
-         [fy ty] (sort [fy ty])]
+   (let [[sfx stx] (sort [fx tx])
+         [sfy sty] (sort [fy ty])]
      (cond
 
        ;;; horizontal
-       (= fx tx)
-       (map #(make-coord fx %) (range fy (inc ty)))
+       (= sfx stx)
+       (map #(make-coord sfx %) (range sfy (inc sty)))
 
        ;;; vertical
-       (= fy ty)
-       (map #(make-coord % fy) (range fx (inc tx)))
+       (= sfy sty)
+       (map #(make-coord % sfy) (range sfx (inc stx)))
 
        ;;; diagonal
-       :else nil
+       :else
+       (do
+         (assert (= (Math/abs (- tx fx))
+                    (Math/abs (- ty fy)))
+                 "not a 45 degree line")
+         (loop [vent-line []
+                px        fx
+                py        fy]
+           (let [vent-line (conj vent-line (make-coord px py))]
+             (if (= py ty)
+               (do
+                 (assert (= px tx))
+                 vent-line)
+               (recur vent-line
+                      (+ px (if (neg? (- tx fx)) -1 1))
+                      (+ py (if (neg? (- ty fy)) -1 1)))))))
        ))
    )
   )
@@ -94,7 +109,13 @@
        read-lines
        build-vent-map
        (count-vents 2)
-       ))
+       )
+  )
 
 (defn day-5-2 []
+  (->> (input-5-1)
+       read-lines
+       build-vent-map
+       (count-vents 2)
+       )
   )
