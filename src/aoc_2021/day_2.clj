@@ -10,9 +10,15 @@
    "down 8"
    "forward 2"])
 
-(def input-2-1
+(defn input-2-1 []
   (->> "resources/day_2_1.txt"
        utils/per-line-input))
+
+(defn init-state []
+  {
+   :aim 0,
+   :position {:horizontal 0, :depth 0},
+   })
 
 (defn get-action [s]
   (let [[action value] (clojure.string/split s #"\s+")
@@ -33,38 +39,47 @@
     )
   )
 
-(defn move [position
+(defn move [state
             {:keys [action value] :as action}]
   (condp = action
     :forward
-    (update position :horizontal + value)
+    (let [aim (:aim state)]
+      (-> state
+          (update-in ,,, [:position :horizontal] + value)
+          (update-in ,,, [:position :depth] + (* aim value))))
 
     :up
-    (update position :depth - value)
+    (update state :aim - value)
 
     :down
-    (update position :depth + value)
+    (update state :aim + value)
 
     :else (assert (format "unsupported action: %s" action))
     )
   )
 
 (defn execute-moves
-  ([moves] (execute-moves moves {:horizontal 0 :depth 0}))
+  ([moves] (execute-moves moves (init-state)))
 
-  ([moves position]
+  ([moves state]
    (->> moves
         (map get-action)
-        (reduce move position)
+        (reduce move state)
         )
    )
   )
 
-(defn get-pos-product [{:keys [horizontal depth] :as position}]
-    (* horizontal depth))
+(defn get-pos-product [{:keys [position] :as state}]
+    (* (:horizontal position) (:depth position)))
 
 (defn day-2-1 []
-  (let [final-pos (->> input-2-1
+  (let [final-pos (->> (input-2-1)
+                       execute-moves
+                       )]
+    (get-pos-product final-pos)))
+
+(defn day-2-2 []
+  (let [final-pos (->> (input-2-1)
                        execute-moves
                        )]
     (get-pos-product final-pos)))
