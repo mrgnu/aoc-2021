@@ -126,6 +126,12 @@
      :folds folds
      }))
 
+(defn fold-all [manual]
+  (loop [manual manual]
+    (if (empty? (:folds manual))
+      manual
+      (recur (perform-fold manual)))))
+
 (defn day-13-1 []
   (->> (input-13-1)
        read-manual
@@ -136,4 +142,10 @@
   )
 
 (defn day-13-2 []
+  (->> (input-13-1)
+       read-manual
+       fold-all
+       :dots
+       manual-strings
+       )
   )
