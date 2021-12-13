@@ -33,7 +33,7 @@ fi
 echo "generating source files for day ${day} ..."
 
 echo "- src file ${sf} ..."
-cat $tsf | sed 's/FNORD/7/g' > $sf
+cat $tsf | sed "s/FNORD/${day}/g" > $sf
 
 echo "- test file ${tf} ..."
-cat $ttf | sed 's/FNORD/7/g' > $tf
+cat $ttf | sed "s/FNORD/${day}/g" > $tf
