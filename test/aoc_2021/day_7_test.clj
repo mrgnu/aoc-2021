@@ -9,8 +9,8 @@
         (testing "get-horizontal-position"
           (is (= 2 (get-horizontal-position shrimps)))
           )
-        (testing "get-move-cost"
-          (is (= 37 (get-move-cost 2 shrimps)))
+        (testing "get-fuel-cost"
+          (is (= 37 (get-fuel-cost 2 shrimps)))
           )
         )
 

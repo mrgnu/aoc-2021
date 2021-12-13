@@ -31,16 +31,19 @@
 (defn get-horizontal-position [shrimps]
   (median shrimps))
 
-(defn get-move-cost [^Integer position shrimps]
+(defn- get-move-cost [^Integer from ^Integer to]
+  (Math/abs ^Integer (- to from)))
+
+(defn get-fuel-cost [^Integer position shrimps]
   (reduce (fn [acc ^Integer p]
-            (+ acc (Math/abs ^Integer (- position p))))
+            (+ acc (get-move-cost p position)))
           0
           shrimps))
 
 (defn day-7-1 []
   (let [shrimps  (->> (input-7-1) read-shrimps)
         position (get-horizontal-position shrimps)]
-    (get-move-cost position shrimps)))
+    (get-fuel-cost position shrimps)))
 
 (defn get-acc-move-cost [^Integer from ^Integer to]
   (let [d (Math/abs ^Integer (- to from))]
