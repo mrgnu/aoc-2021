@@ -5,6 +5,7 @@
 (deftest unit-test-day-10
   (testing "unit tests day 10"
     (testing "part 1"
+      (is (= 26397 (->> test-input-10-1 parse-program program-error-score)))
       )
 
     (testing "part 2"
@@ -14,6 +15,7 @@
 (deftest day-10
   (testing "day 10"
     (testing "part 1"
+      (is (= 216297 (day-10-1)))
       )
 
     (testing "part 2"
