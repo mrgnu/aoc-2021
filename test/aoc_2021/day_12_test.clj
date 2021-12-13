@@ -33,6 +33,16 @@
       )
 
     (testing "part 2"
+      (let [get-visit-count (fn [input]
+                              (->> input
+                                   read-cave-map
+                                   (find-paths one-small-non-start-end-at-most-twice)
+                                   count)
+                              )]
+        (is (=   36 (get-visit-count test-input-12-1)))
+        (is (=  103 (get-visit-count test-input-12-2)))
+        (is (= 3509 (get-visit-count test-input-12-3)))
+        )
       )
     ))
 
@@ -43,5 +53,8 @@
       )
 
     (testing "part 2"
+      (comment ;; NOTE: slow - takes 4-5s
+        (is (= 118803 (day-12-2)))
+        )
       )
     ))

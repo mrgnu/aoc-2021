@@ -80,27 +80,57 @@
                {})
        ))
 
+(defn small-cave-at-most-once [visit-counts cave]
+  (or (not (is-small? cave))
+      (zero? (get visit-counts cave 0))))
+
+(defn one-small-non-start-end-at-most-twice [visit-counts cave]
+  (or (not (is-small? cave))
+      (let [visit-count (get visit-counts cave 0)]
+        (if (contains? #{:start :end} cave)
+          ;; start and end only allowed once
+          (zero? visit-count)
+          (if (some #(> % 1)
+                    (vals (filter #(is-small? (key %)) visit-counts)))
+            ;; some small cave visited more than once
+            (zero? visit-count)
+            (< visit-count 2))))))
+
+(defn- add-in [m k]
+  (let [v (get m k 0)]
+    (assoc m k (inc v))))
+
 (defn find-paths
   "returns the set of valid paths from :start to :end"
 
-  ([cave-map] (find-paths cave-map #{} [] :start))
+  ;; default to small-cave-at-most-once
+  ([cave-map] (find-paths small-cave-at-most-once cave-map))
 
-  ([cave-map visited-small path cave]
-   (assert (not (contains? visited-small cave)))
+  ([cave-heuristic cave-map]
+   (find-paths cave-heuristic cave-map {} [] :start))
+
+  ;; cave-huristic is a function taking visit-counts and cave,
+  ;; where visit-counts is a map with mappings from cave to visit count
+  ([cave-heuristic cave-map visit-counts path cave]
+   (assert (cave-heuristic visit-counts cave)
+           "find-paths: not allowed to visit cave")
    (let [
          ;; append currently visited cave to current path
          path (conj path cave)
-         ;; update visited-small
-         visited-small (if (is-small? cave) (conj visited-small cave) visited-small)
+         ;; update visit-counts
+         visit-counts (add-in visit-counts cave)
          ]
      (if (= :end cave)
        #{ path }
        (let [to-visit (->> (cave cave-map)
-                           (remove
-                            (fn [c] (and (is-small? c)
-                                         (contains? visited-small c)))))]
+                           (filter (partial cave-heuristic visit-counts))
+                           )]
          (reduce (fn [paths c]
-                   (let [ps (find-paths cave-map visited-small path c)]
+                   (let [ps (find-paths cave-heuristic
+                                        cave-map
+                                        visit-counts
+                                        path
+                                        c)]
                      (clojure.set/union paths ps)))
                  #{}
                  to-visit)))))
@@ -115,4 +145,9 @@
   )
 
 (defn day-12-2 []
+  (->> (input-12-1)
+       read-cave-map
+       (find-paths one-small-non-start-end-at-most-twice)
+       count
+       )
   )
