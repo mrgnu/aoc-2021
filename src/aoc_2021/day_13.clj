@@ -31,10 +31,13 @@
   (->> "resources/day_13_1.txt"
        utils/per-line-input))
 
+(defn- make-dot [[x y]]
+  {:x x :y y})
+
 (defn- read-dot [line]
   (let [[s & m] (re-find #"(\d+),(\d+)" line)]
     (assert (= 2 (count m)) "invalid dot line")
-    (->> m (map #(Integer. %)) vec)))
+    (->> m (map #(Integer. %)) make-dot)))
 
 (defn- read-fold [line]
   (let [[s & m] (re-find #"fold along (\w)=(\d+)" line)]
@@ -61,16 +64,16 @@
     s))
 
 (defn manual-strings [dots]
-  (let [width (inc (->> dots (map first) (apply max)))]
+  (let [width (inc (->> dots (map :x) (apply max)))]
     (->> dots
-         (group-by second)
+         (group-by :y)
          (sort-by key)
          vals
-         (map (partial map first))
+         (map (partial map :x))
          (map sort)
          (map (partial dot-row-str width))
          )
-  ))
+    ))
 
 (defn- print-manual [dots]
   (->> dots
@@ -80,30 +83,16 @@
        )
   nil)
 
-(defn fold-horizontal [fold-y dots]
-  (let [grouped (group-by #(<= (second %) fold-y) dots)
+(defn fold-at [fold-val axis dots]
+  (let [grouped (group-by #(<= (axis %) fold-val) dots)
         folded  (get grouped false)
         ;; remove folded from dot set
         dots (reduce disj dots folded)
         ;; mirror folded dots
-        mirrored (map (fn [[x y]]
-                        [x (- (* 2 fold-y) y)])
-                      folded)
-        ;; add mirrored to dot set
-        dots (reduce conj dots mirrored)
-        ]
-    dots
-    ))
-
-;; FIXME this could probably be solved by rotation
-(defn fold-vertical [fold-x dots]
-  (let [grouped (group-by #(<= (first %) fold-x) dots)
-        folded  (get grouped false)
-        ;; remove folded from dot set
-        dots (reduce disj dots folded)
-        ;; mirror folded dots
-        mirrored (map (fn [[x y]]
-                        [(- (* 2 fold-x) x) y])
+        mirrored (map (fn [dot]
+                        (let [c (axis dot)
+                              c (- (* 2 fold-val) c)]
+                          (assoc dot axis c)))
                       folded)
         ;; add mirrored to dot set
         dots (reduce conj dots mirrored)
@@ -115,12 +104,7 @@
   (let [dots               (:dots  manual)
         [fold & folds]     (:folds manual)
         {:keys [axis pos]} fold
-        dots
-        (condp = axis
-          :x (fold-vertical   pos dots)
-          :y (fold-horizontal pos dots)
-          (assert false (str "unsupported axis: " axis))
-          )]
+        dots (fold-at pos axis dots)]
     {
      :dots  dots
      :folds folds
