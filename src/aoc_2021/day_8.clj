@@ -128,6 +128,9 @@
         (filter (comp (partial = 1) count second))
         (map second)
         (map first)
+        ;; sorting by (possibly masked) count makes sure order is same
+        ;; in specs and patterns
+        (sort-by (comp count pattern-key))
         ))
   )
 
@@ -147,9 +150,7 @@
   (some (fn [mask]
           (let [masked (map (partial mask-signal-pattern mask)
                             decorated-signal-patterns)]
-            ;; must sort here
-            (when-let [unique (not-empty (get-unique masked :masked-pattern))]
-              (sort-by :count unique))
+            (not-empty (get-unique masked :masked-pattern))
             ))
         known-patterns))
 
@@ -188,8 +189,8 @@
   (let [specs (decorated-digit-specs)
         pats  (decorate-signal-patterns signal-patterns)
         known #{}]
-    (let [unique-specs (sort-by :count (get-unique specs))
-          unique-pats  (sort-by :count (get-unique pats))]
+    (let [unique-specs (get-unique specs)
+          unique-pats  (get-unique pats)]
       ;; collect unique patterns and map to digits
       (let [known (into known (collect-known unique-specs unique-pats))]
         (loop [known known]
