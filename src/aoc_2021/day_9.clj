@@ -72,5 +72,62 @@
        )
   )
 
+(defn collect-heights
+  "returns a map of [x y] -> h"
+  [{:keys [width height data] :as height-map}]
+  (let [coord-height-map (reduce (fn [acc coord]
+                                   (assoc acc coord (apply aget data coord)))
+                                 {}
+                                 (get-coords height-map))]
+    coord-height-map))
+
+(defn find-basin
+  "returns [coord-height-map basin],
+  where coord-height-map is input without basin"
+
+  ([coord-height-map]
+   (find-basin [coord-height-map {}] (first coord-height-map)))
+
+  ;; flood-fill approach
+  ([[chm basin] [coord height]]
+   (let [chm       (dissoc chm coord)
+         basin     (assoc  basin coord height)
+         adjacent  (apply adjacent-coords coord)
+         adjacent  (reduce (fn [acc c]
+                             (if-let [h (get chm c)]
+                               (assoc acc c h)
+                               acc))
+                           {}
+                           adjacent)
+         ]
+     (reduce find-basin
+             [chm basin]
+             adjacent)))
+  )
+
+(defn find-basins [height-map]
+  (let [coord-height-map
+        (->> height-map
+             collect-heights
+             (filter (fn [e] (< (val e) 9)))
+             (into {})
+             )]
+    (loop [chm    coord-height-map
+           basins []]
+      (if (empty? chm)
+        basins
+        (let [[chm basin] (find-basin chm)]
+          (recur chm (conj basins basin)))))
+    ))
+
 (defn day-9-2 []
+  (->> (input-9-1)
+       read-height-map
+       find-basins
+       (sort-by count)
+       reverse
+       (take 3)
+       (map count)
+       (apply *)
+       )
   )

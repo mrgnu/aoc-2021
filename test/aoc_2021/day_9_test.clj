@@ -9,6 +9,16 @@
       )
 
     (testing "part 2"
+      (is (= 1134 (->> test-input-9-1
+                       read-height-map
+                       find-basins
+                       (sort-by count)
+                       reverse
+                       (take 3)
+                       (map count)
+                       (apply *)
+                       )
+             ))
       )
     ))
 
@@ -19,5 +29,6 @@
       )
 
     (testing "part 2"
+      (is (= 1038240 (day-9-2)))
       )
     ))
