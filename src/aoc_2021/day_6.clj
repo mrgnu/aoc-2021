@@ -31,8 +31,33 @@
           0
           fish))
 
+(defn inc-in-map
+  ([m k] (inc-in-map m k 1))
+  ([m k i]
+   (let [v (get m k 0N)]
+     (assoc m k (+ v i)))))
+
+(defn- count-fish-lifelines-i [^Integer days-to-count ^ints fish]
+  (let [timer-map (reduce inc-in-map {} fish)]
+    (loop [timer-map timer-map
+           day       0]
+      (if (>= day days-to-count)
+        (apply + (vals timer-map))
+        (let [timer-map
+              (reduce
+               (fn [tm [k v]]
+                 (let [k (dec k)]
+                   (if (< k 0)
+                     (-> tm
+                         (inc-in-map ,,, 6 v)
+                         (inc-in-map ,,, 8 v))
+                     (inc-in-map tm k v))))
+               {}
+               timer-map)]
+          (recur timer-map (inc day)))))))
+
 (defn count-fish-lifelines [^Integer days-to-count ^ints fish]
-  (count-fish-lifelines-r days-to-count fish))
+  (count-fish-lifelines-i days-to-count fish))
 
 (defn day-6-1 []
   (->> (input-6-1)
@@ -42,4 +67,8 @@
   )
 
 (defn day-6-2 []
+  (->> (input-6-1)
+       read-fish
+       (count-fish-lifelines 256)
+   )
   )

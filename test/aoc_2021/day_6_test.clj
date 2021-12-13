@@ -26,11 +26,12 @@
 
         (is (= 7N (count-fish-lifeline 17 0)))
         )
-    )
+      )
 
-  (testing "part 2"
-    )
-  ))
+    (testing "part 2"
+      (is (= 26984457539N (->> test-input-6-1 read-fish (count-fish-lifelines 256))))
+      )
+    ))
 
 (deftest day-6
   (testing "day 6"
@@ -39,5 +40,6 @@
       )
 
     (testing "part 2"
+      (is (= 1650309278600N (day-6-2)))
       )
     ))
