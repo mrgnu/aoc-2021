@@ -8,6 +8,10 @@
       (testing "count-depth-increases"
         (is (= 7 (count-depth-increases test-input-1-1)))
         ))
+    (testing "part 2"
+      (testing "count-sliding-window-depth-increases"
+        (is (= 5 (count-sliding-window-depth-increases test-input-1-1))))
+      )
     )
   )
 
@@ -15,5 +19,7 @@
   (testing "day 1"
     (testing "part 1"
       (is (= 1446 (day-1-1))))
+    (testing "part 2"
+      (is (= 1486 (day-1-2))))
     )
   )

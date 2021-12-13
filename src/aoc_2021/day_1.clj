@@ -29,3 +29,19 @@
        count-depth-increases
        )
   )
+
+(defn count-sliding-window-depth-increases [depths]
+  (->> depths
+       (partition 3 1)
+       (map (partial apply +))
+       count-depth-increases
+       )
+  )
+
+(defn day-1-2 []
+  (->> "resources/day_1_1.txt"
+       utils/per-line-input
+       (map (fn [s] (Integer. s)))
+       count-sliding-window-depth-increases
+       )
+  )
