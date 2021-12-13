@@ -10,6 +10,11 @@
       )
 
     (testing "part 2"
+      (let [winners (deplete-bingo-game (read-bingo-game test-input-4-1))
+            {:keys [draw winners]} (last winners)]
+        (is (= 1 (count winners)))
+        (is (= 1924 (compute-score draw (first winners))))
+        )
       )
     ))
 
@@ -20,5 +25,6 @@
       )
 
     (testing "part 2"
+      (is (= 9576 (day-4-2)))
       )
     ))

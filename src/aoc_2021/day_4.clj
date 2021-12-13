@@ -25,6 +25,10 @@
    " 2  0 12  3  7"
    ])
 
+(defn input-4-1 []
+  (->> "resources/day_4_1.txt"
+       utils/per-line-input))
+
 (defn- read-draws [s]
   (as-> s x
     (clojure.string/split x #",")
@@ -111,10 +115,6 @@
           (assert (not-empty draws) "no more draws to play")
           (recur draws boards))))))
 
-(defn input-4-1 []
-  (->> "resources/day_4_1.txt"
-       utils/per-line-input))
-
 (defn day-4-1 []
   (->> (input-4-1)
        read-bingo-game
@@ -122,5 +122,22 @@
        )
   )
 
+(defn deplete-bingo-game [{:keys [draws boards] :as game-data}]
+  (loop [[draw & draws] draws
+         boards boards
+         winners []]
+    (let [boards      (update-boards draw boards)
+          new-winners (get-winners boards)
+          boards      (apply disj (set boards) new-winners)
+          winners     (conj winners {:draw draw :winners new-winners})]
+      (if (empty? boards)
+        winners
+        (do
+          (assert (not-empty draws) "no more draws to play")
+          (recur draws boards winners))))))
+
 (defn day-4-2 []
-  )
+  (let [winners (deplete-bingo-game (read-bingo-game (input-4-1)))
+        {:keys [draw winners]} (last winners)]
+    (assert (= 1 (count winners)) "expected a single last winner")
+    (compute-score draw (first winners))))
