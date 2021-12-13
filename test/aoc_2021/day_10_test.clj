@@ -9,6 +9,9 @@
       )
 
     (testing "part 2"
+      (is (= 288957
+             (->> test-input-10-1 parse-program program-completion-score)))
+
       )
     ))
 
@@ -19,5 +22,6 @@
       )
 
     (testing "part 2"
+      (is (= 2165057169 (day-10-2)))
       )
     ))

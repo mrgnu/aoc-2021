@@ -50,7 +50,7 @@
   (let [expected (closing-chunk-for s)]
     (= e expected)))
 
-(defn find-corrupt [prog-line]
+(defn validate-program-line [prog-line]
   (loop [rem   prog-line
          stack (make-stack)]
     (if (empty? rem)
@@ -62,6 +62,8 @@
         {
          :complete false
          :valid true
+         :stack stack
+         :partial prog-line
          })
       (let [[tok & rem] rem
             stack-or-err
@@ -90,7 +92,7 @@
 
 (defn get-invalid [program]
   (->> program
-       (map find-corrupt)
+       (map validate-program-line)
        (filter (comp not :valid))
        )
   )
@@ -120,5 +122,54 @@
        )
   )
 
+(defn fix-program-lines [program]
+  (->> program
+       (map validate-program-line)
+       (filter :stack)
+       (map (fn [r] (concat (:partial r)
+                            (map closing-chunk-for (:stack r)))))
+       (map validate-program-line)
+       (filter (fn [r] (or (not (:complete r))
+                           (not (:valid r)))))
+       )
+  )
+
+(defn completion-token-score [tok]
+  (get {
+        \) 1
+        \] 2
+        \} 3
+        \> 4
+        }
+       tok))
+
+(defn compute-program-line-completion-score [toks]
+  (reduce (fn [acc tok]
+            (+ (* 5 acc)
+               (completion-token-score tok)))
+          0
+          toks))
+
+(defn- middle [s]
+  (assert (odd? (count s)) "count is not odd")
+  (let [i (int (/ (count s) 2))]
+    (nth s i)))
+
+(defn program-completion-score [program]
+  (->> program
+       (map validate-program-line)
+       (filter :stack)
+       (map :stack)
+       (map (partial map closing-chunk-for))
+       (map compute-program-line-completion-score)
+       sort
+       middle
+       )
+  )
+
 (defn day-10-2 []
+  (->> (input-10-1)
+       parse-program
+       program-completion-score
+       )
   )
