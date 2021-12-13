@@ -75,9 +75,15 @@
          )
     ))
 
-(defn- print-manual [dots]
-  (->> dots
-       manual-strings
+(defn- to-printable [s]
+  (-> s
+      (clojure.string/replace #"#" "\u2588")
+      (clojure.string/replace #"\." " ")
+      ))
+
+(defn- print-manual [manual-strings]
+  (->> manual-strings
+       (map to-printable)
        (map println)
        doall
        )
