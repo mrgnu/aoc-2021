@@ -24,7 +24,7 @@
     ))
 
 (deftest day-1
-  (testing "day 1"
+  (testing "day 2"
     (comment ;;; NOTE: part 2 changes interpretation
       (testing "part 1"
         (let [final-pos (execute-moves (input-2-1))]
