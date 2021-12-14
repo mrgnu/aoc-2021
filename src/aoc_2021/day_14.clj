@@ -2,6 +2,17 @@
   (:require [aoc-2021.utils :as utils])
   )
 
+(defn- inc-in [m [k n]]
+  (let [v (get m k 0N)]
+    (assoc m k (+ v n))))
+
+(defn- get-char-counts [s]
+  (let [occurrences (group-by identity s)]
+        (reduce (fn [m k]
+                  (update m k (comp bigint count)))
+                occurrences
+                (keys occurrences))))
+
 (def test-input-14-1
   [
    "NNCB"
@@ -70,24 +81,53 @@
            (recur (inc i) polymer))))))
   )
 
-(defn- get-char-counts [s]
-  (let [occurrences (group-by identity s)]
-        (reduce (fn [m k]
-                  (update m k (comp bigint count)))
-                occurrences
-                (keys occurrences))))
+(defn- build-mappings [rules]
+  (reduce (fn [acc [f t]]
+            (assoc acc f [(str (first f) t)
+                          (str t (second f))]))
+          {}
+          rules))
+
+(defn collect-char-counts
+
+  ([n polymer-spec]
+   (collect-char-counts n
+                        (build-mappings (:insertion-rules polymer-spec))
+                        (:template polymer-spec)))
+
+  ([n rule-mappings template]
+   (let [initial-pair-counts (->> template
+                                  (partition 2 1)
+                                  (map (partial apply str))
+                                  get-char-counts)]
+     (loop [i           0
+            pair-counts initial-pair-counts]
+       (if (>= i n)
+         ;; add first letter from template
+         ;; add second letter for each pair (n times)
+         (reduce inc-in
+                 ;; add first letter from template
+                 {(first template) 1}
+                 ;; convert pair-count mappings to seq of [<polymer-pair second char> <count>]
+                 (map (fn [[pp n]] [(second pp) n]) pair-counts))
+         (recur (inc i)
+                (reduce (fn [acc [pp n]]
+                          (let [[fpp spp] (get rule-mappings pp)]
+                            (-> acc
+                                (inc-in ,,, [fpp n])
+                                (inc-in ,,, [spp n]))))
+                        {}
+                        pair-counts))))))
+  )
 
 (defn get-polymer-value
 
-  ([n polymer-spec]
-   (let [polymer (apply-polymer-spec n (:insertion-rules polymer-spec) (:template polymer-spec))]
-     (get-polymer-value polymer)))
+  ([n polymer-spec] (get-polymer-value (collect-char-counts n polymer-spec)))
 
-  ([polymer]
-   (let [char-counts (sort-by second (get-char-counts polymer))
+  ([char-counts]
+   (let [char-counts (sort-by second char-counts)
          min-pair (first char-counts)
-         max-pair (last char-counts)
-         ]
+         max-pair (last  char-counts)]
      (- (second max-pair) (second min-pair))))
   )
 
@@ -99,4 +139,8 @@
   )
 
 (defn day-14-2 []
+  (->> (input-14-1)
+       read-polymer-spec
+       (get-polymer-value 40)
+       )
   )

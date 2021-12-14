@@ -19,9 +19,9 @@
         )
 
       (testing "part 2"
-        )
+        (is (= 2188189693529N (get-polymer-value 40 polymer-spec)))
       )
-    ))
+    )))
 
 (deftest day-14
   (testing "day 14"
@@ -30,5 +30,6 @@
       )
 
     (testing "part 2"
+      (is (= 12271437788530N (day-14-2)))
       )
     ))
