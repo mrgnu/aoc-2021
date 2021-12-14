@@ -4,16 +4,29 @@
 
 (deftest unit-test-day-14
   (testing "unit tests day 14"
-    (testing "part 1"
-      )
+    (let [polymer-spec (->> test-input-14-1 read-polymer-spec)
+          {:keys [insertion-rules template]} polymer-spec]
+      (testing "part 1"
+        (testing "apply-polymer-spec"
+          (is (= "NCNBCHB"
+                 (apply-polymer-spec polymer-spec)))
+          (is (= "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
+                 (apply-polymer-spec 4 insertion-rules template)))
+          )
+        (testing "get-polymer-value"
+          (is (= 1588 (get-polymer-value 10 polymer-spec)))
+          )
+        )
 
-    (testing "part 2"
+      (testing "part 2"
+        )
       )
     ))
 
 (deftest day-14
   (testing "day 14"
     (testing "part 1"
+      (is (= 5656 (day-14-1)))
       )
 
     (testing "part 2"
