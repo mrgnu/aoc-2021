@@ -102,11 +102,68 @@
            (rest path)))
   )
 
+(defn- bump-risk-value [risk step]
+  (inc (mod (dec (+ risk step)) 9)))
+
+(defn- create-clone [risk-levels axis step step-offset]
+  (let [offset (* step-offset step)]
+    (reduce (fn [acc [coord risk]]
+              (assoc acc
+                     (update coord axis + offset)
+                     (bump-risk-value risk step)))
+            {}
+            risk-levels)))
+
+(defn expand-map [risk-level-map]
+  (let [old-width  (:width  risk-level-map)
+        old-height (:height risk-level-map)
+        new-width  (* old-width 5)
+        new-height (* old-height 5)
+        levels     (:risk-levels risk-level-map)
+        ]
+    (let [x-expanded
+          (reduce (fn [acc level]
+                    (let [new-tile (create-clone levels :x level old-width)]
+                      (reduce conj acc new-tile)))
+                  levels
+                  (range 1 5))]
+      (let [xy-expanded
+            (reduce (fn [acc level]
+                      (let [new-tile (create-clone x-expanded :y level old-height)]
+                        (reduce conj acc new-tile)))
+                    x-expanded
+                    (range 1 5))]
+        {
+         :width  new-width
+         :height new-height
+         :risk-levels xy-expanded
+         }))))
+
+(defn- get-map-strings [risk-level-map]
+  (->> risk-level-map
+       :risk-levels
+       ;; sort rows
+       (group-by (comp :y key))
+       (sort-by first)
+       (map second)
+       ;; sort cols
+       (map (partial sort-by (comp :x key)))
+       (map (partial map second))
+       ;; convert to strings
+       (map (partial apply str))
+       ))
+
 (defn day-15-1 []
   (->> (input-15-1)
        read-risk-level-map
        get-total-risk
-       ))
+       )
+  )
 
 (defn day-15-2 []
+  (->> (input-15-1)
+       read-risk-level-map
+       expand-map
+       get-total-risk
+       )
   )
