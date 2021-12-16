@@ -1,12 +1,15 @@
-(ns aoc-2021.a-star)
+(ns aoc-2021.a-star
+  (:require [clojure.data.priority-map :refer [priority-map]]
+            )
+  )
 
 (defn- make-a-star-data [from to cost-fun heuristic neighbor-fun]
   {
    :from         from
    :to           to
-   :open         #{from}
    :g-score      {from 0}
-   :f-score      {from (heuristic from to)}
+   ;; priority queue with mappings from open -> cost
+   :f-score      (priority-map from (heuristic from to))
    :came-from    {}
    :heuristic    heuristic
    :cost-fun     cost-fun
@@ -14,20 +17,12 @@
    })
 
 (defn a-star-find-current
-  ;; find next node to visit, and remove from open
+  ;; find next node to visit, and remove from open priority queue
   ;; returns [a-star-data current]
-  [{:keys [to open f-score] :as a-star-data}]
-  ;; FIXME priority queue?
-  (let [[_ current]
-        (reduce (fn [[min-cost min-candidate] candidate]
-                  (let [cost (get f-score candidate)]
-                    (if (< cost min-cost)
-                      [cost candidate]
-                      [min-cost min-candidate])))
-                [Integer/MAX_VALUE nil]
-                open)
-        open (disj open current)]
-    [(assoc a-star-data :open open)
+  [{:keys [to f-score] :as a-star-data}]
+  (let [current (->> f-score first first)
+        f-score (dissoc f-score current)]
+    [(assoc a-star-data :f-score f-score)
      current]))
 
 (defn a-star-update-g-score [{:keys [to g-score heuristic cost-fun] :as a-star-data}
@@ -39,12 +34,12 @@
         tg   (+ c-score cost)
         ]
     (if (< tg g)
-      (-> a-star-data
-          (assoc-in  ,,, [:came-from neighbor] current)
-          (assoc-in  ,,, [:g-score   neighbor] tg)
-          (assoc-in  ,,, [:f-score   neighbor] (+ tg (heuristic neighbor to)))
-          (update ,,, :open conj neighbor)
-          )
+      (let [f-score (assoc (:f-score a-star-data) neighbor (+ tg (heuristic neighbor to)))]
+        (-> a-star-data
+            (assoc-in  ,,, [:came-from neighbor] current)
+            (assoc-in  ,,, [:g-score   neighbor] tg)
+            (assoc     ,,, :f-score    f-score)
+            ))
       a-star-data)))
 
 (defn- a-star-update-g-scores [{:keys [to heuristic neighbor-fun] :as a-star-data}
@@ -74,10 +69,10 @@
   ([from to cost-fun heuristic neighbor-fun]
    (a-star (make-a-star-data from to cost-fun heuristic neighbor-fun)))
 
-  ([{:keys [open to] :as a-star-data}]
-   (when (empty? open) (throw (AssertionError. "no path found")))
+  ([{:keys [to] :as a-star-data}]
+   (when (empty? (:f-score a-star-data)) (throw (AssertionError. "no path found")))
 
-   ;; find coord in open with least estimated cost and remove from open set
+   ;; find and remoe coord in open priority queue with least estimated cost
    (let [[a-star-data current] (a-star-find-current a-star-data)]
 
      ;; to reached - reconstruct path
