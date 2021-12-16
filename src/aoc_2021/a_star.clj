@@ -25,9 +25,9 @@
     [(assoc a-star-data :f-score f-score)
      current]))
 
-(defn a-star-update-g-score [{:keys [to g-score heuristic cost-fun] :as a-star-data}
-                             c-score
+(defn a-star-update-g-score [c-score
                              current
+                             {:keys [to g-score heuristic cost-fun] :as a-star-data}
                              neighbor]
   (let [cost (cost-fun current neighbor)
         g    (get g-score neighbor Integer/MAX_VALUE)
@@ -47,13 +47,9 @@
   (assert (contains? (:g-score a-star-data) current))
   (let [c-score   (get (:g-score a-star-data) current)
         neighbors (neighbor-fun current)]
-    (loop [a-star-data a-star-data
-           neighbors   neighbors]
-      (if (empty? neighbors)
-        a-star-data
-        (let [[neighbor & neighbors] neighbors]
-          (recur (a-star-update-g-score a-star-data c-score current neighbor)
-                 neighbors))))))
+    (reduce (partial a-star-update-g-score c-score current)
+            a-star-data
+            neighbors)))
 
 (defn- a-star-reconstruct-path [{:keys [from to came-from] :as a-star-data}]
   (loop [path  [to]
