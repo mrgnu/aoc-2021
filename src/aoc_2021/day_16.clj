@@ -143,6 +143,28 @@
            (apply + (map get-version-sum sub-packages))))
       )))
 
+(defn calculate-packet [packet]
+  (let [type  (get-in packet [:header :type])
+        value (get packet :packet)]
+    (condp = type
+      ;; 0: sum
+      0 (apply + (map calculate-packet value))
+      ;; 1: product
+      1 (apply * (map calculate-packet value))
+      ;; 2: min
+      2 (apply min (map calculate-packet value))
+      ;; 3: max
+      3 (apply max (map calculate-packet value))
+      ;; 4: literal value
+      4 value
+      ;; 5: greater than
+      5 (if (apply > (map calculate-packet value)) 1 0)
+      ;; 6: less than
+      6 (if (apply < (map calculate-packet value)) 1 0)
+      ;; 7: equal
+      7 (if (apply = (map calculate-packet value)) 1 0)
+      )))
+
 (defn day-16-1 []
   (->> (input-16-1)
        make-bit-holder
@@ -153,4 +175,10 @@
   )
 
 (defn day-16-2 []
+  (->> (input-16-1)
+       make-bit-holder
+       read-packet
+       first
+       calculate-packet
+       )
   )

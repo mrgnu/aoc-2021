@@ -15,6 +15,18 @@
       )
 
     (testing "part 2"
+      (testing "calculate-packet"
+        (let [val-fn (fn [transmission]
+                       (->> transmission make-bit-holder read-packet first calculate-packet))]
+          (is (=  3 (val-fn "C200B40A82")))
+          (is (= 54 (val-fn "04005AC33890")))
+          (is (=  7 (val-fn "880086C3E88112")))
+          (is (=  9 (val-fn "CE00C43D881120")))
+          (is (=  1 (val-fn "D8005AC2A8F0")))
+          (is (=  0 (val-fn "F600BC2D8F")))
+          (is (=  0 (val-fn "9C005AC2F8F0")))
+          (is (=  1 (val-fn "9C0141080250320F1802104A08")))
+          ))
       )
     ))
 
@@ -25,5 +37,6 @@
       )
 
     (testing "part 2"
+      (is (= 12301926782560 (day-16-2)))
       )
     ))
