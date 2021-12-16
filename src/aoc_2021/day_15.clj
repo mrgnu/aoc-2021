@@ -20,11 +20,8 @@
           set))
 
 (defn- manhattan-heuristic [from to]
-  (let [coords [from to]
-        xs     (map :x coords)
-        ys     (map :y coords)
-        dx     (->> xs (apply -) Math/abs)
-        dy     (->> ys (apply -) Math/abs)]
+  (let [dx (Math/abs ^Integer (- (:x from) (:x to)))
+        dy (Math/abs ^Integer (- (:y from) (:y to)))]
     (+ dx dy)))
 
 (def test-input-15-1
