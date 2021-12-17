@@ -119,6 +119,20 @@
             "didn't hit")
     max-h))
 
+(defn find-all-trajectories [target-area]
+  (let [
+        min-xv 0
+        max-xv (:x-max target-area)
+        max-yv (dec (- (:y-min target-area)))
+        min-yv (:y-min target-area)
+        ]
+    (let [velocities (for [x (range min-xv (inc max-xv))
+                           y (range min-yv (inc max-yv))]
+                       [x y])
+          probes (map (partial apply make-probe) velocities)
+          hits (filter (fn [probe] (simulate probe target-area)) probes)]
+      (count hits))))
+
 (defn day-17-1 []
   (->> (input-17-1)
        read-target-area
@@ -127,4 +141,8 @@
   )
 
 (defn day-17-2 []
+  (->> (input-17-1)
+       read-target-area
+       find-all-trajectories
+       )
   )

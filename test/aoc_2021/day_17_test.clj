@@ -9,6 +9,7 @@
       )
 
     (testing "part 2"
+      (is (= 112 (->> test-input-17-1 read-target-area find-all-trajectories)))
       )
     ))
 
@@ -19,5 +20,6 @@
       )
 
     (testing "part 2"
+      (is (= 5059 (day-17-2)))
       )
     ))
