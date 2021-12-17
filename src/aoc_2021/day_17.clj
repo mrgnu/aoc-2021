@@ -62,7 +62,7 @@
           "code assumes target area is to right of probe")
   )
 
-(defn simulate [probe target-area]
+(defn simulate [target-area probe]
   (assert-below-right probe target-area)
   (loop [probe probe]
     (cond
@@ -115,7 +115,7 @@
         ;; max height is sum(1..yv)
         max-h (sum-range yv)
         ]
-    (assert (simulate (make-probe xv yv) target-area)
+    (assert (simulate target-area (make-probe xv yv))
             "didn't hit")
     max-h))
 
@@ -130,7 +130,7 @@
                            y (range min-yv (inc max-yv))]
                        [x y])
           probes (map (partial apply make-probe) velocities)
-          hits (filter (fn [probe] (simulate probe target-area)) probes)]
+          hits (filter (partial simulate target-area) probes)]
       (count hits))))
 
 (defn day-17-1 []
