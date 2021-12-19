@@ -131,6 +131,20 @@
         (let [[split? sf-rhs] (sf-split sf-rhs)]
           [split? [sf-lhs sf-rhs]])))))
 
+(defn sf-reduce [sf-num]
+  (loop [sf-num sf-num]
+    (let [[exploded? sf-num] (sf-explode sf-num)]
+      (if exploded?
+        (recur sf-num)
+        (let [[split? sf-num] (sf-split sf-num)]
+          (if split?
+            (recur sf-num)
+            sf-num))))))
+
+(defn sf-add [sf-lhs sf-rhs]
+  (let [sf-num [sf-lhs sf-rhs]]
+    (sf-reduce sf-num)))
+
 (defn day-18-1 []
   )
 
