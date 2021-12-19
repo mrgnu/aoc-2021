@@ -145,6 +145,9 @@
   (let [sf-num [sf-lhs sf-rhs]]
     (sf-reduce sf-num)))
 
+(defn sf-add-all [sf-nums]
+  (reduce sf-add sf-nums))
+
 (defn day-18-1 []
   )
 
