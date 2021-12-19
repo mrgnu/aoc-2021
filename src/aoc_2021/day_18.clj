@@ -116,6 +116,21 @@
            [nil sf-num])))))
   )
 
+(defn sf-split [sf-num]
+  (if (number? sf-num)
+    (if (>= sf-num 10)
+      (let [half (/ sf-num 2)]
+        [true
+         [(int (Math/floor half))
+          (int (Math/ceil  half))]])
+      [false sf-num])
+    (let [[sf-lhs sf-rhs] sf-num
+          [split? sf-lhs] (sf-split sf-lhs)]
+      (if split?
+        [split? [sf-lhs sf-rhs]]
+        (let [[split? sf-rhs] (sf-split sf-rhs)]
+          [split? [sf-lhs sf-rhs]])))))
+
 (defn day-18-1 []
   )
 

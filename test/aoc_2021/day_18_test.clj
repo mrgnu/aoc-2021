@@ -32,6 +32,20 @@
         (is (= [false [[1 2] [3 [4 5]]]]
                (sf-explode [[1 2] [3 [4 5]]])))
         )
+
+      (testing "sf-split"
+        (is (= [true [5 5]] (sf-split 10)))
+        (is (= [true [5 6]] (sf-split 11)))
+        (is (= [true [6 6]] (sf-split 12)))
+
+        (is (= [true [[7 8] 0]]
+               (sf-split [15 0])))
+        (is (= [true [[[[0,7],4],[[7,8],[0,13]]],[1,1]]]
+               (sf-split [[[[0 7] 4] [15 [0 13]]] [1 1]])))
+
+        (is (= [false 9] (sf-split 9)))
+        (is (= [false [9 7]] (sf-split [9 7])))
+        )
       )
 
     (testing "part 2"
