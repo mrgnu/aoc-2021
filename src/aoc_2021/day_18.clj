@@ -160,6 +160,29 @@
       (+ (* 3 (sf-magnitude sf-lhs))
          (* 2 (sf-magnitude sf-rhs))))))
 
+(defn get-pairs [s]
+  (loop [s   s
+         acc []]
+    (if (empty? s)
+      acc
+      (let [[i & s] s
+            acc (reduce (fn [acc p]
+                          (-> acc
+                              (conj [i p])
+                              (conj [p i])))
+                        acc
+                        s)]
+        (recur s acc)))))
+
+(defn get-largest-pair-magnitude [sf-nums]
+  (->> sf-nums
+       get-pairs
+       (map (fn [[a b]] (sf-magnitude (sf-add a b))))
+       sort
+       last
+       )
+  )
+
 (defn day-18-1 []
   (->> (input-18-1)
        (map read-snailfish-number)
@@ -169,4 +192,8 @@
   )
 
 (defn day-18-2 []
+  (->> (input-18-1)
+       (map read-snailfish-number)
+       get-largest-pair-magnitude
+       )
   )
