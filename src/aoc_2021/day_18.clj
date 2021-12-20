@@ -161,6 +161,11 @@
          (* 2 (sf-magnitude sf-rhs))))))
 
 (defn day-18-1 []
+  (->> (input-18-1)
+       (map read-snailfish-number)
+       sf-add-all
+       sf-magnitude
+       )
   )
 
 (defn day-18-2 []

@@ -132,6 +132,7 @@
 (deftest day-18
   (testing "day 18"
     (testing "part 1"
+      (is (= 4120 (day-18-1)))
       )
 
     (testing "part 2"
