@@ -1,5 +1,6 @@
 (ns aoc-2021.day-18
   (:require [aoc-2021.utils :as utils])
+  (:require [clojure.zip :as zip])
   )
 
 (def test-input-18-1
@@ -45,76 +46,80 @@
     (assert (empty? rem))
     p))
 
-(defn- add-left [sf-lhs n]
-  (when n
-    (cond
-      (number? sf-lhs) (+ sf-lhs n)
-      (-> sf-lhs second number?) [(first sf-lhs)
-                                  (+ (second sf-lhs) n)]
-      :else nil
-      )))
+(defn- find-num [dz step-fn]
+  (loop [dz    dz
+         steps 0]
+    (let [dz (step-fn dz)]
+      (if-not dz
+        nil
+        (let [steps (inc steps)
+              node  (zip/node dz)]
+          (if (number? node)
+            [steps node]
+            (recur dz steps)))))))
 
-(defn- add-right [sf-rhs n]
-  (when n
-    (cond
-      (number? sf-rhs) (+ sf-rhs n)
-      (-> sf-rhs first number?) [(+ (first sf-rhs) n)
-                                 (second sf-rhs)]
-      :else nil
-      )))
+(defn- find-prev-num [dz]
+  (when-let [p (find-num dz zip/prev)]
+    (let [[steps node] p]
+      [(- steps) node])))
 
-(defn sf-explode
-  ([sf-num]
-   (let [[explode-state sf-num] (sf-explode sf-num 0)]
-     [(some? explode-state)
-      sf-num]))
+(defn- find-next-num [dz]
+  (let [next-fn (fn [dz]
+                  (let [dz (zip/next dz)]
+                    (when-not (zip/end? dz) dz)))]
+  (find-num dz next-fn)))
 
-  ;; NOTE: returns [exploded-pair, sf-num],
-  ;; where exploded-pair is initially [lhs, rhs], but left and right
-  ;; are replaced with nils when melded
-  ([sf-num depth]
-   (if (number? sf-num)
-     ;; regular number - break recursion
-     [nil sf-num]
+(defn- update-rel [dz steps v]
+  (assert steps)
+  (assert (not (zero? steps)))
+  (let [step-fn (if (> steps 0) zip/next zip/prev)
+        back-fn (if (> steps 0) zip/prev zip/next)
+        steps   (Math/abs steps)]
+    ;; move to target node
+    (let [dz (nth (iterate step-fn dz) steps)]
+      (assert (number? (zip/node dz)))
+      ;; update value
+      (let [dz (zip/replace dz v)]
+        ;; move back
+        (nth (iterate back-fn dz) steps)))))
 
-     ;; this is a pair
-     (let [[sf-lhs sf-rhs] sf-num]
-       (if (< depth 4)
-         ;; meld depth not reached - continue down
-         (let [depth (inc depth)]
-           ;; recurse left path
-           (let [[left-exploded-state sf-lhs] (sf-explode sf-lhs depth)]
+(defn- inc-rel [dz rel-spec v]
+  (if-not rel-spec
+    dz
+    (let [[steps node] rel-spec
+          v (+ v node)]
+      (update-rel dz steps v))))
 
-             (if left-exploded-state
-               ;; left path exploded - no more recursion, meld as needed
-               (let [exploded-right-cary (second left-exploded-state)
-                     new-rhs (add-right sf-rhs exploded-right-cary)]
-                 (if new-rhs
-                   ;; meld to right - update right exploded state to not meld again
-                   (let [left-exploded-state [(first left-exploded-state) nil]]
-                     [left-exploded-state
-                      [sf-lhs new-rhs]])
-                   ;; no meld to right
-                   [left-exploded-state [sf-lhs sf-rhs]]))
+(defn- sf-explode-node [dz]
+  (assert (number? (first  (zip/node dz))))
+  (assert (number? (second (zip/node dz))))
+  (let [node (zip/node dz)
+        dz   (zip/replace dz 0)
+        p    (find-prev-num dz)
+        dz   (inc-rel dz p (first node))
+        n    (find-next-num dz)
+        dz   (inc-rel dz n (second node))]
+    dz))
 
-               ;; left path didn't explode - recurse right and meld as needed
-               (let [[right-exploded-state sf-rhs] (sf-explode sf-rhs depth)]
-                 (if-let [new-lhs (add-left sf-lhs (first right-exploded-state))]
-                   ;; right path exploded
-                   ;; meld to left - update left exploded state to not meld again
-                   (let [right-exploded-state [nil (second right-exploded-state)]]
-                     [right-exploded-state
-                      [new-lhs sf-rhs]])
-                   ;; no meld to left
-                   [right-exploded-state [sf-lhs sf-rhs]])))))
-
-         ;; depth == 4, melding depth
-         (if (and (number? sf-lhs) (number? sf-rhs))
-           ;; exploded
-           [sf-num 0]
-           ;; not exploded
-           [nil sf-num])))))
-  )
+(defn sf-explode [sf-num]
+  (if-not (vector? sf-num)
+    [false sf-num]
+    (let [dz
+          (reduce (fn [dz _]
+                    (if (zip/end? dz)
+                      (reduced nil)
+                      (let [depth (-> dz zip/path count)
+                            node  (zip/node dz)]
+                        (if (and (= depth 4)
+                                 (vector? node))
+                          ;; this is the one to explode
+                          (reduced (sf-explode-node dz))
+                          (zip/next dz)))))
+                  (zip/vector-zip sf-num)
+                  (range))]
+      (if dz
+        [true  (zip/root dz)]
+        [false sf-num]))))
 
 (defn sf-split [sf-num]
   (if (number? sf-num)
