@@ -153,6 +153,13 @@
 (defn sf-add-all [sf-nums]
   (reduce sf-add sf-nums))
 
+(defn sf-magnitude [sf-num]
+  (if (number? sf-num)
+    sf-num
+    (let [[sf-lhs sf-rhs] sf-num]
+      (+ (* 3 (sf-magnitude sf-lhs))
+         (* 2 (sf-magnitude sf-rhs))))))
+
 (defn day-18-1 []
   )
 
