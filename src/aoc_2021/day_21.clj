@@ -1,5 +1,6 @@
 (ns aoc-2021.day-21
-  (:require [aoc-2021.utils :as utils])
+  (:require [aoc-2021.utils :as utils]
+            [clojure.math.combinatorics :as combo])
   )
 
 (defn input-21-1 []
@@ -80,6 +81,47 @@
                 rolls)))))
   )
 
+(defn roll-permutations
+  "returns a map with keys as possible roll sums and vals as number of
+  combinations for that roll sum"
+  [roll-vals roll-count]
+  (as-> roll-vals x
+    (combo/selections x roll-count)
+    (group-by (partial apply +) x)
+    (reduce (fn [acc [v vs]]
+              (assoc acc v (count vs)))
+            {}
+            x)
+    )
+  )
+
+(defn play-games
+  ([players] (play-games (roll-permutations [1 2 3] 3)
+                         players
+                         :player-1
+                         21
+                         1
+                         {:player-1 0N :player-2 0N}
+                         ))
+
+  ([roll-values players player winning-score perm-count wins]
+   (let [p (get players player)]
+     (reduce (fn [wins [rs rc]]
+               (let [rp (update-player p rs)
+                     players (assoc players player rp)
+                     pc (* perm-count rc)]
+                 (if (winner? rp winning-score)
+                   (update wins player + pc)
+                   (play-games roll-values
+                               players
+                               (other-player player)
+                               winning-score
+                               pc
+                               wins))))
+             wins
+             roll-values)))
+  )
+
 (defn compute-game-score [players]
   (let [loser (get players (other-player (:winner players)))]
     (* (:rolls players)
@@ -94,4 +136,10 @@
   )
 
 (defn day-21-2 []
+  (->> (input-21-1)
+       read-players
+       play-games
+       vals
+       (apply max)
+       )
   )

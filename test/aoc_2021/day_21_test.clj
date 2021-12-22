@@ -15,6 +15,8 @@
       )
 
     (testing "part 2"
+      (is (= {3 1, 4 3, 5 6, 6 7, 7 6, 8 3, 9 1}
+             (roll-permutations [1 2 3] 3)))
       )
     ))
 
@@ -25,5 +27,9 @@
       )
 
     (testing "part 2"
+      ;; NOTE: takes ~2m to run
+      (comment
+        (is (= 57328067654557N (day-21-2)))
+        )
       )
     ))
