@@ -19,6 +19,17 @@
       )
 
     (testing "part 2"
+      (is (= 3351
+             (->> (test-input-20-1)
+                  read-image
+                  ;; enhancement-map[0] == .
+                  (enhance-n-times 50 (repeat \.))
+                  :pixels
+                  vals
+                  (filter (partial = \#))
+                  count
+                  )
+             ))
       )
     ))
 

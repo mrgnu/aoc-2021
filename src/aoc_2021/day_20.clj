@@ -135,4 +135,13 @@
   )
 
 (defn day-20-2 []
+  (->> (input-20-1)
+       read-image
+       ;; enhancement-map[0] == #, enhancement-map[511] == .
+       (enhance-n-times 50 (cycle [\. \#]))
+       :pixels
+       vals
+       (filter (partial = \#))
+       count
+       )
   )
